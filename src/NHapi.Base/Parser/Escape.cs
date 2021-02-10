@@ -334,8 +334,6 @@ namespace NHapi.Base.Parser
 			testString = "this | is ^ a field \\T\\ with & some ~ bad stuff \\T\\";
 			Console.Out.WriteLine("Original:  " + testString);
 			String escaped = escape(testString, ec);
-			Console.Out.WriteLine("Escaped:   " + escaped);
-			Console.Out.WriteLine("Unescaped: " + unescape(escaped, ec));
 		}
 	}
 }

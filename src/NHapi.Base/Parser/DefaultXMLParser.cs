@@ -56,6 +56,7 @@ namespace NHapi.Base.Parser
 			try
 			{
 				doc = new XmlDocument();
+				doc.XmlResolver = null;
 				XmlElement root = doc.CreateElement(messageName);
 				doc.AppendChild(root);
 			}
@@ -262,56 +263,6 @@ namespace NHapi.Base.Parser
 			}
 
 			return ret;
-		}
-
-		/// <summary>Test harness </summary>
-		[STAThread]
-		public new static void Main(String[] args)
-		{
-			if (args.Length != 1)
-			{
-				Console.Out.WriteLine("Usage: DefaultXMLParser pipe_encoded_file");
-				Environment.Exit(1);
-			}
-
-			//read and parse message from file 
-			try
-			{
-				FileInfo messageFile = new FileInfo(args[0]);
-				long fileLength = SupportClass.FileLength(messageFile);
-				StreamReader r = new StreamReader(messageFile.FullName, Encoding.Default);
-				char[] cbuf = new char[(int)fileLength];
-				Console.Out.WriteLine("Reading message file ... " + r.Read((Char[])cbuf, 0, cbuf.Length) + " of " + fileLength +
-											 " chars");
-				r.Close();
-				String messString = Convert.ToString(cbuf);
-
-				ParserBase inParser = null;
-				ParserBase outParser = null;
-				PipeParser pp = new PipeParser();
-				XMLParser xp = new DefaultXMLParser();
-				Console.Out.WriteLine("Encoding: " + pp.GetEncoding(messString));
-				if (pp.GetEncoding(messString) != null)
-				{
-					inParser = pp;
-					outParser = xp;
-				}
-				else if (xp.GetEncoding(messString) != null)
-				{
-					inParser = xp;
-					outParser = pp;
-				}
-
-				IMessage mess = inParser.Parse(messString);
-				Console.Out.WriteLine("Got message of type " + mess.GetType().FullName);
-
-				String otherEncoding = outParser.Encode(mess);
-				Console.Out.WriteLine(otherEncoding);
-			}
-			catch (Exception e)
-			{
-				SupportClass.WriteStackTrace(e, Console.Error);
-			}
 		}
 
 		static DefaultXMLParser()

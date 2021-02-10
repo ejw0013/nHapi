@@ -369,7 +369,7 @@ namespace NHapi.Base.Model
 					}
 					catch (MethodAccessException)
 					{
-						o = Activator.CreateInstance(c);
+						o = null;
 					}
 					if (!(o is IStructure))
 					{

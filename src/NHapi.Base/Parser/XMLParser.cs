@@ -123,6 +123,7 @@ namespace NHapi.Base.Parser
 		{
 			parser = new XmlDocument();
 			parser.PreserveWhitespace = false; // this may not be similar functionality.
+			parser.XmlResolver = null;
 		}
 
 		public XMLParser(IModelClassFactory factory)
@@ -130,6 +131,7 @@ namespace NHapi.Base.Parser
 		{
 			parser = new XmlDocument();
 			parser.PreserveWhitespace = false; // this may not be similar functionality.
+			parser.XmlResolver = null;
 		}
 
 		/// <summary> Returns a String representing the encoding of the given message, if
@@ -214,6 +216,7 @@ namespace NHapi.Base.Parser
 				//    //parser.parse(new XmlSourceSupport(new System.IO.StringReader(message)));
 				//    //doc = parser.getDocument();
 				//}
+				doc.XmlResolver = null;
 				m = ParseDocument(doc, version);
 			}
 			catch (XmlException e)
@@ -736,80 +739,6 @@ namespace NHapi.Base.Parser
 			}
 
 			return value_Renamed;
-		}
-
-		/// <summary>Test harness </summary>
-		[STAThread]
-		public static void Main(String[] args)
-		{
-			if (args.Length != 1)
-			{
-				Console.Out.WriteLine("Usage: XMLParser pipe_encoded_file");
-				Environment.Exit(1);
-			}
-
-			//read and parse message from file 
-			try
-			{
-				PipeParser parser = new PipeParser();
-				FileInfo messageFile = new FileInfo(args[0]);
-				long fileLength = SupportClass.FileLength(messageFile);
-				StreamReader r = new StreamReader(messageFile.FullName, Encoding.Default);
-				char[] cbuf = new char[(int)fileLength];
-				Console.Out.WriteLine("Reading message file ... " + r.Read((Char[])cbuf, 0, cbuf.Length) + " of " + fileLength +
-											 " chars");
-				r.Close();
-				String messString = Convert.ToString(cbuf);
-				IMessage mess = parser.Parse(messString);
-				Console.Out.WriteLine("Got message of type " + mess.GetType().FullName);
-
-				XMLParser xp = new AnonymousClassXMLParser();
-
-				//loop through segment children of message, encode, print to console
-				String[] structNames = mess.Names;
-				for (int i = 0; i < structNames.Length; i++)
-				{
-					IStructure[] reps = mess.GetAll(structNames[i]);
-					for (int j = 0; j < reps.Length; j++)
-					{
-						if (typeof(ISegment).IsAssignableFrom(reps[j].GetType()))
-						{
-							//ignore groups
-							XmlDocument docBuilder = new XmlDocument();
-							XmlDocument doc = new XmlDocument(); //new doc for each segment
-							XmlElement root = doc.CreateElement(reps[j].GetType().FullName);
-							doc.AppendChild(root);
-							xp.Encode((ISegment)reps[j], root);
-							StringWriter out_Renamed = new StringWriter();
-							Console.Out.WriteLine("Segment " + reps[j].GetType().FullName + ": \r\n" + doc.OuterXml);
-
-							Type[] segmentConstructTypes = new Type[] { typeof(IMessage) };
-							Object[] segmentConstructArgs = new Object[] { null };
-							ISegment s = (ISegment)reps[j].GetType().GetConstructor(segmentConstructTypes).Invoke(segmentConstructArgs);
-							xp.Parse(s, root);
-							XmlDocument doc2 = new XmlDocument();
-							XmlElement root2 = doc2.CreateElement(s.GetType().FullName);
-							doc2.AppendChild(root2);
-							xp.Encode(s, root2);
-							StringWriter out2 = new StringWriter();
-							XmlWriter ser = XmlWriter.Create(out2);
-							doc.WriteTo(ser);
-							if (out2.ToString().Equals(out_Renamed.ToString()))
-							{
-								Console.Out.WriteLine("Re-encode OK");
-							}
-							else
-							{
-								Console.Out.WriteLine("Warning: XML different after parse and re-encode: \r\n" + out2.ToString());
-							}
-						}
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				SupportClass.WriteStackTrace(e, Console.Error);
-			}
 		}
 
 		static XMLParser()
